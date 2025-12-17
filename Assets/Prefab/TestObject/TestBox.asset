@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1d534bbde0a6c064aa81a70c1257e13e, type: 3}
   m_Name: TestBox
   m_EditorClassIdentifier: 
-  id: 
-  prefab: {fileID: 0}
+  id: TestBox
+  prefab: {fileID: 7812468029327253312, guid: 211efd6d85267e046b0703d699ab1ea5, type: 3}
   placementType: 0
-  size: {x: 0, y: 0}
+  size: {x: 5, y: 5}
