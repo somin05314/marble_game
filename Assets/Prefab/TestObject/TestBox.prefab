@@ -29,7 +29,7 @@ Transform:
   m_GameObject: {fileID: 7812468029327253312}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 5.1, y: 4.89, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 5, y: 5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -158,6 +158,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   prefab: {fileID: 7812468029327253312}
   physicsType: 0
+  snapPoints: []
+  isSnapped: 0
 --- !u!50 &3123362229437654981
 Rigidbody2D:
   serializedVersion: 4

@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d534bbde0a6c064aa81a70c1257e13e, type: 3}
+  m_Name: TestBox 1
+  m_EditorClassIdentifier: 
+  id: TestBox
+  prefab: {fileID: 7812468029327253312, guid: 837f12a6b67ed394398b3bc85b3c6e69, type: 3}
+  placementType: 0
+  size: {x: 10, y: 1}

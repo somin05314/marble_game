@@ -138,4 +138,15 @@ public class GameModeManager : MonoBehaviour
             }
         }
     }
+
+    public void OnGoalReached()
+    {
+        if (currentMode != GameMode.Play)
+            return;
+
+        Debug.Log("GOAL!");
+
+        EnterBuildMode();
+    }
+
 }

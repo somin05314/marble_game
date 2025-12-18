@@ -96,6 +96,12 @@ public class GridPlacer : MonoBehaviour
 
         ghostPlacement = ghost.GetComponent<PlacementObject>();
 
+        foreach (var t in ghost.GetComponentsInChildren<SnapTarget>())
+        {
+            Destroy(t);
+        }
+
+
         foreach (var col in ghost.GetComponentsInChildren<Collider2D>())
         {
             col.enabled = true;
@@ -120,15 +126,35 @@ public class GridPlacer : MonoBehaviour
         Vector2 mouseWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         Vector2Int cell = grid.WorldToCell(mouseWorld);
 
+        // 1. 기본 위치 (그리드)
         ghost.transform.position = grid.CellToWorld(cell);
 
-        bool canPlace = ghostPlacement.CanPlace(placedLayer);
-        SetGhostColor(canPlace ? Color.green : Color.red);
+        // 2.  스냅 미리보기
+        bool snapped = SnapManager.TrySnap(ghostPlacement);
+
+        // 3. 설치 가능 판정 (스냅된 위치 기준)
+        bool canPlace = ghostPlacement.CanPlace(placedLayer, ghostPlacement);
+
+        // 4. 색상 분기 (UX 핵심)
+        if (!canPlace)
+        {
+            SetGhostColor(Color.red);              // 설치 불가
+        }
+        else if (snapped)
+        {
+            SetGhostColor(new Color(0.2f, 1f, 0.2f)); // 스냅 + 설치 가능 (선명한 초록)
+        }
+        else
+        {
+            SetGhostColor(Color.green);            // 그냥 설치 가능
+        }
     }
+
 
     void TryPlace()
     {
-        if (!ghostPlacement.CanPlace(placedLayer))
+        // 이미 UpdateGhost에서 스냅 + 판정 끝남
+        if (!ghostPlacement.CanPlace(placedLayer, ghostPlacement))
             return;
 
         GameObject obj = Instantiate(
@@ -142,6 +168,8 @@ public class GridPlacer : MonoBehaviour
         foreach (var col in obj.GetComponentsInChildren<Collider2D>())
             col.isTrigger = false;
     }
+
+
 
     // =========================
     // Selection / Drag
