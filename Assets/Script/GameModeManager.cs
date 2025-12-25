@@ -1,142 +1,173 @@
+ï»¿using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class GameModeManager : MonoBehaviour
 {
     public static GameModeManager Instance;
+
     public GameMode currentMode = GameMode.Build;
+
+    [Header("Play")]
     public GameObject marblePrefab;
     public Transform spawnPoint;
 
-    List<PlacementSnapshot> snapshot = new List<PlacementSnapshot>();
+    [Header("Snapshot")]
+    public PuzzleSnapshotManager snapshotManager;
+    public CameraSnapshotManager cameraSnapshot;
+
+    [Header("Physics")]
+    public PhysicsModeApplier physicsApplier;
+
+    // âœ… (2) ë¦¬ì…‹ ì™„ë£Œ ì´ë²¤íŠ¸: BuildMode ë³µêµ¬ê°€ "ì™„ì „íˆ ëë‚œ ë’¤" í˜¸ì¶œ
+    public static event Action OnGameReset;
+
+    bool isRestoring = false;
+
+    // âœ… (4) ë§ˆë¸” ì¤‘ë³µ ìŠ¤í° ë°©ì§€ìš© ì¶”ì 
+    GameObject currentMarble;
 
     void Awake()
     {
+        // âœ… (1) ì‹±ê¸€í†¤ ê°€ë“œ
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
         Instance = this;
+
+        // í•„ìš”í•˜ë©´ ì”¬ ì´ë™ì—ì„œë„ ìœ ì§€
+        // DontDestroyOnLoad(gameObject);
     }
 
-    private void Update()
+    void Update()
     {
-        //ÀÓ½Ã º¯È¯
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            GameModeManager.Instance.EnterPlayMode();
-        }
+        if (isRestoring)
+            return;
 
+        if (Input.GetKeyDown(KeyCode.Space))
+            EnterPlayMode();
 
         if (Input.GetKeyDown(KeyCode.R))
             EnterBuildMode();
     }
 
-    public void SpawnMarble()
+    void LateUpdate()
     {
-        Instantiate(marblePrefab, spawnPoint.position, Quaternion.identity);
+        if (currentMode == GameMode.Build)
+            SaveCameraSnapshot();
     }
 
+    // =========================
+    // Build Mode
+    // =========================
     public void EnterBuildMode()
     {
-        currentMode = GameMode.Build;
-        RestoreSnapshot();
+        if (isRestoring) return;
+
+        StartCoroutine(RestoreBuildModeRoutine());
     }
 
+    IEnumerator RestoreBuildModeRoutine()
+    {
+        isRestoring = true;
+        currentMode = GameMode.Build;
+
+        // âœ… (4) ë¹Œë“œëª¨ë“œë¡œ ëŒì•„ì˜¬ ë• ë§ˆë¸” ì œê±°
+        ClearMarble();
+
+        yield return null;
+
+        RestoreSnapshot();
+        // í¼ì¦ ê¸°ë¯¹ ë¦¬ì…‹
+        ResetAllResettables();
+
+        yield return null;
+
+        RestoreCameraSnapshot();
+
+        // âœ… (5) ë³µêµ¬ ëë‚œ ë’¤ íˆ´ ì„¸íŒ… (ìƒíƒœ ê¼¬ì„ ë°©ì§€)
+        BuildToolManager.Instance.SetTool(BuildTool.Place);
+
+        // âœ… (2) "ë¦¬ì…‹ ì™„ë£Œ" ì‹ í˜¸
+        OnGameReset?.Invoke();
+
+        isRestoring = false;
+    }
+
+    // =========================
+    // Play Mode
+    // =========================
     public void EnterPlayMode()
     {
+        if (currentMode == GameMode.Play)
+            return;
+
+        BuildToolManager.Instance.SetTool(BuildTool.None);
+
         SaveSnapshot();
+
         currentMode = GameMode.Play;
         ApplyPhysics();
+
+        // âœ… (4) í˜¹ì‹œ ë‚¨ì•„ìˆë˜ ë§ˆë¸”ì´ ìˆìœ¼ë©´ ì œê±° í›„ ìŠ¤í°
+        ClearMarble();
         SpawnMarble();
     }
 
+    public void SpawnMarble()
+    {
+        if (marblePrefab == null || spawnPoint == null)
+            return;
+
+        currentMarble = Instantiate(marblePrefab, spawnPoint.position, Quaternion.identity);
+    }
+
+    void ClearMarble()
+    {
+        if (currentMarble != null)
+        {
+            Destroy(currentMarble);
+            currentMarble = null;
+        }
+    }
+
+    // =========================
+    // Snapshot
+    // =========================
     void SaveSnapshot()
     {
-        snapshot.Clear();
-
-        var placedObjects = FindObjectsOfType<PlacementObject>();
-
-        foreach (var po in placedObjects)
-        {
-            if (po.gameObject.layer == LayerMask.NameToLayer("Ghost"))
-                continue; // °í½ºÆ® Á¦¿Ü
-
-            snapshot.Add(new PlacementSnapshot
-            {
-                prefab = po.prefab,   // ÇÁ¸®ÆÕ ÂüÁ¶´Â ¾Æ·¡¿¡¼­ ¼³¸í
-                position = po.transform.position,
-                rotation = po.transform.rotation
-            });
-
-            Debug.Log($"SaveSnapshot: {po.name}, prefab = {po.prefab}");
-        }
-
-
+        snapshotManager.Save();
     }
 
     void RestoreSnapshot()
     {
-        // ÇöÀç ¹èÄ¡µÈ ¿ÀºêÁ§Æ® ÀüºÎ Á¦°Å
-        var current = FindObjectsOfType<PlacementObject>();
-        foreach (var po in current)
-            Destroy(po.gameObject);
-
-        // ±¸½½ Á¦°Å
-        var marbles = GameObject.FindGameObjectsWithTag("Marble");
-        foreach (var m in marbles)
-            Destroy(m);
-
-        // ½º³À¼¦À¸·Î ´Ù½Ã »ı¼º
-        foreach (var snap in snapshot)
-        {
-            GameObject obj = Instantiate(
-                snap.prefab,
-                snap.position,
-                snap.rotation
-            );
-
-            // Build ¸ğµå ±âº»°ª
-            var rb = obj.GetComponent<Rigidbody2D>();
-            if (rb != null)
-            {
-                rb.bodyType = RigidbodyType2D.Kinematic;
-                rb.gravityScale = 0;
-                rb.simulated = true;
-            }
-
-            foreach (var col in obj.GetComponentsInChildren<Collider2D>())
-            {
-                col.enabled = true;
-                col.isTrigger = false; // 
-            }
-        }
+        snapshotManager.Restore();
     }
 
+    // =========================
+    // Camera Snapshot
+    // =========================
+    public void SaveCameraSnapshot()
+    {
+        if (currentMode != GameMode.Build) return;
+        if (isRestoring) return;
 
+        cameraSnapshot.Save();
+    }
+
+    void RestoreCameraSnapshot()
+    {
+        cameraSnapshot.Restore();
+    }
+
+    // =========================
+    // Physics
+    // =========================
     void ApplyPhysics()
     {
-        var objects = FindObjectsOfType<PlacementObject>();
-
-        foreach (var po in objects)
-        {
-            Rigidbody2D rb = po.GetComponent<Rigidbody2D>();
-            if (rb == null) continue;
-
-            switch (po.physicsType)
-            {
-                case PhysicsType.Static:
-                    rb.bodyType = RigidbodyType2D.Static;
-                    break;
-
-                case PhysicsType.DynamicNoGravity:
-                    rb.bodyType = RigidbodyType2D.Dynamic;
-                    rb.gravityScale = 0;
-                    break;
-
-                case PhysicsType.DynamicGravity:
-                    rb.bodyType = RigidbodyType2D.Dynamic;
-                    rb.gravityScale = 1;
-                    break;
-            }
-        }
+        physicsApplier.Apply(currentMode);
     }
 
     public void OnGoalReached()
@@ -144,9 +175,17 @@ public class GameModeManager : MonoBehaviour
         if (currentMode != GameMode.Play)
             return;
 
-        Debug.Log("GOAL!");
-
         EnterBuildMode();
     }
 
+    void ResetAllResettables()
+    {
+        var resettables = FindObjectsOfType<MonoBehaviour>();
+
+        foreach (var r in resettables)
+        {
+            if (r is IResettable resettable)
+                resettable.ResetState();
+        }
+    }
 }

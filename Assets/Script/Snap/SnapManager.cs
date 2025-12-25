@@ -1,54 +1,134 @@
-using UnityEngine;
+﻿using UnityEngine;
 
-public class SnapManager : MonoBehaviour
+public static class SnapManager
 {
-    public static bool TrySnap(PlacementObject obj)
+    static int GhostLayer => LayerMask.NameToLayer("Ghost");
+
+    /// <summary>
+    /// Ghost / Preview 전용 스냅 계산 (가장 가까운 1쌍만 반환)
+    /// </summary>
+    public static bool TryGetSnapPreview(
+        PlacementObject previewObj,
+        out SnapPreviewPair best
+    )
     {
-        Debug.Log($"TrySnap called on: {obj.name}");
+        best = default;
 
-        SnapTarget[] targets = FindObjectsOfType<SnapTarget>();
-        Debug.Log($"SnapTargets found: {targets.Length}");
-        Debug.Log($"SnapPoints count: {obj.snapPoints?.Length ?? 0}");
+        if (previewObj == null)
+            return false;
 
-        float minDist = float.MaxValue;
-        SnapTarget bestTarget = null;
-        Transform bestSnapPoint = null;
+        // ✅ 내 스냅 포인트들
+        var myPoints = previewObj.GetComponentsInChildren<SnapPoint>();
 
-        foreach (var point in obj.snapPoints)
+        // ✅ 씬 전체 스냅 포인트 (LINQ 제거: GC 감소)
+        var allPoints = Object.FindObjectsOfType<SnapPoint>();
+
+        float bestDistSq = float.PositiveInfinity;
+        bool found = false;
+
+        for (int i = 0; i < myPoints.Length; i++)
         {
-            foreach (var target in targets)
+            var my = myPoints[i];
+            if (my == null || my.root == null || my.root.owner == null)
+                continue;
+
+            Vector3 myPos = my.transform.position;
+
+            for (int j = 0; j < allPoints.Length; j++)
             {
-                if (target.GetComponentInParent<PlacementObject>() == obj)
+                var other = allPoints[j];
+                if (other == null || other.root == null || other.root.owner == null)
                     continue;
 
-                float dist = Vector2.Distance(point.position, target.transform.position);
-                Debug.Log(
-                    $"Checking dist: {dist:F3} (radius: {target.snapRadius}) " +
-                    $"point: {point.name}, target: {target.name}"
-                );
-                if (dist < target.snapRadius && dist < minDist)
+                var otherOwner = other.root.owner;
+
+                // ✅ 자기 자신(프리뷰 오브젝트) 제외
+                if (otherOwner == previewObj)
+                    continue;
+
+                // ✅ 고스트 레이어 제외 (상대 오브젝트 기준)
+                if (otherOwner.gameObject.layer == GhostLayer)
+                    continue;
+
+                // ✅ (옵션) 비활성 오브젝트 제외
+                if (!otherOwner.gameObject.activeInHierarchy)
+                    continue;
+
+                Vector3 otherPos = other.transform.position;
+
+                // ✅ 거리 비교: sqrt 없는 sqrMagnitude
+                float radius = Mathf.Min(my.snapRadius, other.snapRadius);
+                float radiusSq = radius * radius;
+
+                Vector3 delta = otherPos - myPos;
+                float distSq = delta.sqrMagnitude;
+
+                if (distSq > radiusSq)
+                    continue;
+
+                if (distSq < bestDistSq)
                 {
-                    minDist = dist;
-                    bestTarget = target;
-                    bestSnapPoint = point;
+                    bestDistSq = distSq;
+                    found = true;
+
+                    best = new SnapPreviewPair
+                    {
+                        myPoint = my,
+                        otherPoint = other,
+                        previewObjectPos = previewObj.transform.position + delta
+                    };
                 }
             }
         }
-        Debug.Log(
-    $"BestTarget: {(bestTarget ? bestTarget.name : "null")}, " +
-    $"BestSnapPoint: {(bestSnapPoint ? bestSnapPoint.name : "null")}"
-);
-        if (bestTarget != null && bestSnapPoint != null)
+
+        return found;
+    }
+
+    public static void CommitSnapDirect(
+        PlacementObject myObj,
+        SnapRoot myRoot,
+        SnapPoint myPoint,
+        PlacementObject otherObj,
+        SnapRoot otherRoot,
+        SnapPoint otherPoint
+    )
+    {
+        if (myObj == null || otherObj == null) return;
+        if (myObj == otherObj) return;
+
+        if (myRoot == null || otherRoot == null) return;
+        if (myPoint == null || otherPoint == null) return;
+
+        // ✅ 중복 커밋 방지 (같은 점 조합이 이미 있으면 추가하지 않음)
+        bool already =
+            myObj.connections.Exists(c =>
+                c.otherRoot == otherRoot &&
+                c.otherPoint == otherPoint &&
+                c.myRoot == myRoot &&
+                c.myPoint == myPoint
+            );
+
+        if (already)
+            return;
+
+        var c1 = new SnapConnection
         {
-            Vector3 offset = obj.transform.position - bestSnapPoint.position;
-            obj.transform.position = bestTarget.transform.position + offset;
+            myRoot = myRoot,
+            myPoint = myPoint,
+            otherRoot = otherRoot,
+            otherPoint = otherPoint
+        };
 
-            obj.snappedTo = bestTarget.GetComponentInParent<PlacementObject>();
-            return true;
-        }
+        var c2 = new SnapConnection
+        {
+            myRoot = otherRoot,
+            myPoint = otherPoint,
+            otherRoot = myRoot,
+            otherPoint = myPoint
+        };
 
-        obj.snappedTo = null;
-        return false;
+        myObj.connections.Add(c1);
+        otherObj.connections.Add(c2);
     }
 
 }

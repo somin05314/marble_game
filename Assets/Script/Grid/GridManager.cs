@@ -60,7 +60,9 @@ public class GridManager : MonoBehaviour
 
     private void Update()
     {
-        Vector2 mouseWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        if (!MouseUtil.TryGetMouseWorld(Camera.main, out Vector3 mouseWorld))
+            return;
+
         debugCell = WorldToCell(mouseWorld);
     }
 

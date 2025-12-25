@@ -22,4 +22,18 @@ public class BuildToolManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Alpha2))
             currentTool = BuildTool.Select;
     }
+
+    public void SetTool(BuildTool tool)
+    {
+        if (currentTool == tool)
+            return;
+
+        currentTool = tool;
+
+        // Select → 다른 툴로 갈 때 선택 해제
+        if (tool != BuildTool.Select)
+        {
+            SelectionManager.Instance.Deselect();
+        }
+    }
 }

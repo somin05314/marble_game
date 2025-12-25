@@ -1,379 +1,597 @@
+Ôªøusing System.Linq;
 using UnityEngine;
 
 public class GridPlacer : MonoBehaviour
 {
+    [Header("Refs")]
     public GridManager grid;
     public PlacementData placementData;
 
+    [Header("Runtime")]
     GameObject ghost;
-    PlacementObject ghostPlacement;
+    PlacementObject previewPO;
+    PlacementObject selected;
+    PlacementObject placeSnapTarget;
 
-    LayerMask placedLayer;
-
+    // -----------------------------
+    // States
+    // -----------------------------
     bool isDragging;
-    Vector3 dragOffset;
+    bool dragCandidate;
 
-    Vector3 originalPosition;
-    bool canDropHere;
+    bool isRotating;
+    Quaternion rotationBefore;
+    Vector3 positionBefore;
+    Vector3 rotationPivot;
 
-    Quaternion originalRotation;
+    Vector3 dragStartPos;
+    Vector3 mouseDownWorld;
 
+    const float DRAG_START_DISTANCE = 0.08f;
 
+    // Place preview snap cache
+    bool placeHasSnap;
+    SnapPreviewPair placeSnap;
 
-    void Start()
+    BuildTool lastTool;
+
+    // Masks (cache)
+    int placedMask;
+    int wallMask;
+
+    void Awake()
     {
-        placedLayer = LayerMask.GetMask("PlacedObject");
+        placedMask = LayerMask.GetMask("PlacedObject");
+        wallMask = LayerMask.GetMask("Wall");
     }
 
     void Update()
     {
         if (GameModeManager.Instance.currentMode != GameMode.Build)
         {
-            ClearGhost();
+            ClearSelection(forceFinalize: true);
+            ClearPlacePreviewObjects();
             return;
         }
-
-        HandleRotation();
 
         var tool = BuildToolManager.Instance.currentTool;
 
+        if (tool != lastTool)
+        {
+            OnToolChanged(tool);
+            lastTool = tool;
+        }
+
+        // -----------------------------
+        // Tool: Place
+        // -----------------------------
         if (tool == BuildTool.Place)
         {
-            HandlePlaceTool();
+            UpdatePlacePreview();
+
+            if (Input.GetMouseButtonDown(0))
+                ApplyPlace();
         }
-        else if (tool == BuildTool.Select)
+
+        // -----------------------------
+        // Tool: Select
+        // -----------------------------
+        if (tool == BuildTool.Select)
         {
-            HandleSelectTool();
-        }
-    }
-
-    // =========================
-    // Place Tool
-    // =========================
-    void HandlePlaceTool()
-    {
-        if (ghost == null)
-            CreateGhost();
-
-        UpdateGhost();
-        HandleRotation();
-
-        if (Input.GetMouseButtonDown(0))
-            TryPlace();
-    }
-
-    // =========================
-    // Select Tool
-    // =========================
-    void HandleSelectTool()
-    {
-        ClearGhost();
-
-        if (Input.GetMouseButtonDown(0))
-        {
-            TrySelect();
-            StartDrag();
-        }
-
-        if (Input.GetMouseButton(0))
-            DragSelected();
-
-        if (Input.GetMouseButtonUp(0))
+            HandleSelection();
+            UpdateDrag();
             EndDrag();
+            HandleRotation();
 
-        if (Input.GetKeyDown(KeyCode.Delete))
-            DeleteSelected();
-    }
-
-    // =========================
-    // Ghost
-    // =========================
-    void CreateGhost()
-    {
-        ghost = Instantiate(placementData.prefab);
-        ghost.name = "GhostPreview";
-        ghost.layer = LayerMask.NameToLayer("Ghost");
-
-        ghostPlacement = ghost.GetComponent<PlacementObject>();
-
-        foreach (var t in ghost.GetComponentsInChildren<SnapTarget>())
-        {
-            Destroy(t);
-        }
-
-
-        foreach (var col in ghost.GetComponentsInChildren<Collider2D>())
-        {
-            col.enabled = true;
-            col.isTrigger = true;
-        }
-
-        SetGhostColor(Color.green);
-    }
-
-    void ClearGhost()
-    {
-        if (ghost != null)
-        {
-            Destroy(ghost);
-            ghost = null;
-            ghostPlacement = null;
+            if (Input.GetKeyDown(KeyCode.Delete))
+                TryDeleteSelected();
         }
     }
 
-    void UpdateGhost()
+    void OnToolChanged(BuildTool tool)
     {
-        Vector2 mouseWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Vector2Int cell = grid.WorldToCell(mouseWorld);
+        if (tool != BuildTool.Select)
+            ClearSelection(forceFinalize: true);
 
-        // 1. ±‚∫ª ¿ßƒ° (±◊∏ÆµÂ)
-        ghost.transform.position = grid.CellToWorld(cell);
-
-        // 2.  Ω∫≥¿ πÃ∏Æ∫∏±‚
-        bool snapped = SnapManager.TrySnap(ghostPlacement);
-
-        // 3. º≥ƒ° ∞°¥… ∆«¡§ (Ω∫≥¿µ» ¿ßƒ° ±‚¡ÿ)
-        bool canPlace = ghostPlacement.CanPlace(placedLayer, ghostPlacement);
-
-        // 4. ªˆªÛ ∫–±‚ (UX «ŸΩ…)
-        if (!canPlace)
-        {
-            SetGhostColor(Color.red);              // º≥ƒ° ∫“∞°
-        }
-        else if (snapped)
-        {
-            SetGhostColor(new Color(0.2f, 1f, 0.2f)); // Ω∫≥¿ + º≥ƒ° ∞°¥… (º±∏Ì«— √ ∑œ)
-        }
+        if (tool == BuildTool.Place)
+            EnsurePlacePreviewObjects();
         else
-        {
-            SetGhostColor(Color.green);            // ±◊≥… º≥ƒ° ∞°¥…
-        }
+            ClearPlacePreviewObjects();
     }
 
-
-    void TryPlace()
+    // =========================================================
+    // Helpers
+    // =========================================================
+    static float GetAllowedPenetration(in SnapPreviewPair snap)
     {
-        // ¿ÃπÃ UpdateGhostø°º≠ Ω∫≥¿ + ∆«¡§ ≥°≥≤
-        if (!ghostPlacement.CanPlace(placedLayer, ghostPlacement))
+        float a = snap.myPoint != null ? snap.myPoint.allowedPenetration : 0f;
+        float b = snap.otherPoint != null ? snap.otherPoint.allowedPenetration : 0f;
+        return Mathf.Min(a, b);
+    }
+
+    // =========================================================
+    // PLACE TOOL
+    // =========================================================
+    void UpdatePlacePreview()
+    {
+        EnsurePlacePreviewObjects();
+
+        if (!MouseUtil.TryGetMouseWorld(Camera.main, out var mouse))
             return;
+
+        Vector3 freePos = grid.CellToWorld(grid.WorldToCell(mouse));
+
+        // 1) ÌîÑÎ¶¨Î∑∞Î•º freePosÏóê ÎëêÍ≥† Ïä§ÎÉÖ Í≥ÑÏÇ∞
+        previewPO.transform.position = freePos;
+
+        placeHasSnap = SnapManager.TryGetSnapPreview(previewPO, out placeSnap);
+        placeSnapTarget = placeHasSnap ? placeSnap.otherPoint.root.owner : null;
+
+        // 2) Ïã§Ï†ú ÌëúÏãú/ÌåêÏ†ï ÏúÑÏπò(Ïä§ÎÉÖÏù¥Î©¥ Ïä§ÎÉÖ ÏúÑÏπò)
+        Vector3 checkPos = placeHasSnap ? placeSnap.previewObjectPos : freePos;
+
+        ghost.transform.position = checkPos;
+
+        // ‚úÖ Ï∂©Îèå ÌåêÏ†ïÎèÑ checkPos Í∏∞Ï§ÄÏúºÎ°ú Ìï¥Ïïº Ìï®
+        previewPO.transform.position = checkPos;
+
+        float allowedPen = placeHasSnap ? GetAllowedPenetration(placeSnap) : 0f;
+
+        bool canPlace = previewPO.CanPlaceByRule(
+            wallMask,
+            placeSnapTarget,
+            allowedPen
+        );
+
+        SetGhostColor(canPlace);
+    }
+
+    void ApplyPlace()
+    {
+        if (previewPO == null)
+            return;
+
+        float allowedPen = placeHasSnap ? GetAllowedPenetration(placeSnap) : 0f;
+
+        bool canPlace = previewPO.CanPlaceByRule(
+            wallMask,
+            placeSnapTarget,
+            allowedPen
+        );
+
+        if (!canPlace)
+            return;
+
+        Vector3 finalPos = placeHasSnap
+            ? placeSnap.previewObjectPos
+            : previewPO.transform.position;
 
         GameObject obj = Instantiate(
             placementData.prefab,
-            ghost.transform.position,
-            ghost.transform.rotation
+            finalPos,
+            Quaternion.identity
         );
 
-        obj.layer = LayerMask.NameToLayer("PlacedObject");
+        var po = obj.GetComponent<PlacementObject>();
+        po.placementData = placementData;
 
-        foreach (var col in obj.GetComponentsInChildren<Collider2D>())
-            col.isTrigger = false;
+        if (placeHasSnap && placeSnapTarget != null)
+        {
+            var myPoint = po.GetComponentsInChildren<SnapPoint>()
+                .First(p => p.snapId == placeSnap.myPoint.snapId);
+
+            var otherPoint = placeSnapTarget.GetComponentsInChildren<SnapPoint>()
+                .First(p => p.snapId == placeSnap.otherPoint.snapId);
+
+            SnapManager.CommitSnapDirect(
+                po,
+                myPoint.root,
+                myPoint,
+                placeSnapTarget,
+                otherPoint.root,
+                otherPoint
+            );
+        }
+
+        po.SetPlaced();
     }
 
-
-
-    // =========================
-    // Selection / Drag
-    // =========================
-    void TrySelect()
+    // =========================================================
+    // SELECT
+    // =========================================================
+    void HandleSelection()
     {
-        Vector2 mouseWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        if (!Input.GetMouseButtonDown(0))
+            return;
 
-        RaycastHit2D hit = Physics2D.Raycast(
-            mouseWorld,
-            Vector2.zero,
-            0f,
-            Physics2D.AllLayers
-        );
+        if (!MouseUtil.TryGetMouseWorld(Camera.main, out var mouse))
+            return;
 
-        if (hit.collider == null)
+        var po = PickPlacementObject(mouse);
+
+        if (po == null)
         {
-            SelectionManager.Instance.Deselect();
+            ClearSelection();
             return;
         }
 
-        if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Ghost"))
-            return;
+        if (selected != null && selected != po)
+            selected.SetPlacedVisual();
 
-        var po = hit.collider.GetComponentInParent<PlacementObject>();
-        if (po != null)
-            SelectionManager.Instance.Select(po);
+        selected = po;
+        selected.SetSelectedVisual();
+
+        dragCandidate = !selected.HasMultipleConnections;
+        mouseDownWorld = mouse;
+        dragStartPos = selected.transform.position;
+        isDragging = false;
+
+        if (selected.HasMultipleConnections)
+        {
+            isDragging = false;
+            return;
+        }
     }
 
-    void StartDrag()
+    void ClearSelection(bool forceFinalize = false)
     {
-        var selected = SelectionManager.Instance.selected;
         if (selected == null)
             return;
 
-        isDragging = true;
+        if (forceFinalize)
+        {
+            selected.SetPlaced();
+            RestorePhysics();
+        }
 
-        originalPosition = selected.transform.position;
+        selected.SetPlacedVisual();
 
-        Vector3 mouseWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        mouseWorld.z = 0;
-
-        dragOffset = selected.transform.position - mouseWorld;
+        selected = null;
+        isDragging = false;
+        dragCandidate = false;
+        isRotating = false;
     }
 
-    void DragSelected()
+    // =========================================================
+    // DRAG
+    // =========================================================
+    void UpdateDrag()
     {
+        if (selected == null)
+            return;
+
+        if (!Input.GetMouseButton(0))
+            return;
+
+        if (!MouseUtil.TryGetMouseWorld(Camera.main, out var mouse))
+            return;
+
         if (!isDragging)
-            return;
-
-        var selected = SelectionManager.Instance.selected;
-        if (selected == null)
-            return;
-
-        Vector3 mouseWorld = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        mouseWorld.z = 0;
-
-        Vector3 targetPos = mouseWorld + dragOffset;
-        Vector2Int cell = grid.WorldToCell(targetPos);
-        selected.transform.position = grid.CellToWorld(cell);
-
-        var po = selected.GetComponent<PlacementObject>();
-        canDropHere = po.CanPlace(placedLayer, po);
-
-        // ∫“∞°¥…«“ ∂ß∏∏ ª°∞£ªˆ
-        if (!canDropHere)
-            SetTempColor(po, Color.red);
-        else
-            RestoreSelectedColor(po);
-    }
-
-
-    void SetSelectedColor(PlacementObject obj, Color color)
-    {
-        foreach (var sr in obj.GetComponentsInChildren<SpriteRenderer>())
         {
-            sr.color = color;
+            if (!dragCandidate)
+                return;
+
+            float dist = Vector2.Distance(mouse, mouseDownWorld);
+            if (dist < DRAG_START_DISTANCE)
+                return;
+
+            isDragging = true;
+
+            var rb = selected.GetComponent<Rigidbody2D>();
+            if (rb != null)
+                rb.simulated = false;
+
+            selected.SetGhost();
+            selected.BreakAllSnaps();
         }
+
+        Vector3 freePos = grid.CellToWorld(grid.WorldToCell(mouse));
+
+        selected.transform.position = freePos;
+
+        bool hasSnap = SnapManager.TryGetSnapPreview(selected, out var snap);
+        PlacementObject snapTarget = hasSnap ? snap.otherPoint.root.owner : null;
+
+        Vector3 checkPos = hasSnap ? snap.previewObjectPos : freePos;
+        selected.transform.position = checkPos;
+
+        float allowedPen = hasSnap ? GetAllowedPenetration(snap) : 0f;
+
+        bool canPlace = selected.CanPlaceByRule(
+            wallMask,
+            snapTarget,
+            allowedPen
+        );
+
+        selected.SetGhostVisual(canPlace);
     }
 
     void EndDrag()
     {
-        if (!isDragging)
+        if (Input.GetMouseButtonUp(0))
+            dragCandidate = false;
+
+        if (!isDragging || !Input.GetMouseButtonUp(0))
             return;
 
         isDragging = false;
 
-        var selected = SelectionManager.Instance.selected;
+        bool hasSnap = SnapManager.TryGetSnapPreview(selected, out var snap);
+        PlacementObject snapTarget = hasSnap ? snap.otherPoint.root.owner : null;
+
+        float allowedPen = hasSnap ? GetAllowedPenetration(snap) : 0f;
+
+        bool canPlace = selected.CanPlaceByRule(
+            wallMask,
+            snapTarget,
+            allowedPen
+        );
+
+        if (!canPlace)
+        {
+            selected.transform.position = dragStartPos;
+            selected.SetPlaced();
+            selected.SetPlacedVisual();
+            RestorePhysics();
+            return;
+        }
+
+        if (hasSnap)
+        {
+            selected.transform.position = snap.previewObjectPos;
+
+            var myPoint = selected.GetComponentsInChildren<SnapPoint>()
+                .First(p => p.snapId == snap.myPoint.snapId);
+
+            var otherPoint = snapTarget.GetComponentsInChildren<SnapPoint>()
+                .First(p => p.snapId == snap.otherPoint.snapId);
+
+            SnapManager.CommitSnapDirect(
+                selected,
+                myPoint.root,
+                myPoint,
+                snapTarget,
+                otherPoint.root,
+                otherPoint
+            );
+        }
+
+        selected.SetPlaced();
+        selected.SetSelectedVisual();
+        RestorePhysics();
+    }
+
+    void RestorePhysics()
+    {
         if (selected == null)
             return;
 
-        if (!canDropHere)
-            selected.transform.position = originalPosition;
-
-        RestoreSelectedColor(selected);
+        var rb = selected.GetComponent<Rigidbody2D>();
+        if (rb != null)
+            rb.simulated = true;
     }
 
-
-
-    void DeleteSelected()
-    {
-        var selected = SelectionManager.Instance.selected;
-        if (selected == null)
-            return;
-
-        Destroy(selected.gameObject);
-        SelectionManager.Instance.Deselect();
-    }
-
-    // =========================
-    // Visual / Rotation
-    // =========================
-    void SetGhostColor(Color color)
-    {
-        foreach (var sr in ghost.GetComponentsInChildren<SpriteRenderer>())
-            sr.color = new Color(color.r, color.g, color.b, 0.4f);
-    }
-
+    // =========================================================
+    // ROTATION (Select tool only)
+    // =========================================================
     void HandleRotation()
     {
-        Transform target = GetRotateTarget();
-        if (target == null)
+        if (selected == null || isDragging)
             return;
 
-        float step = 5f;
-        bool rotated = false;
+        int connectionCount = selected.connections.Count;
 
-        if (Input.GetKeyDown(KeyCode.Q))
-        {
-            SaveOriginalRotation(target);
-            target.Rotate(0, 0, step);
-            rotated = true;
-        }
-
-        if (Input.GetKeyDown(KeyCode.E))
-        {
-            SaveOriginalRotation(target);
-            target.Rotate(0, 0, -step);
-            rotated = true;
-        }
-
-        if (!rotated)
+        if (connectionCount >= 2)
             return;
 
-        // Select ≈¯¿œ ∂ß∏∏ ∆«¡§
-        if (BuildToolManager.Instance.currentTool == BuildTool.Select)
-        {
-            var po = target.GetComponent<PlacementObject>();
-            bool canRotate = po.CanPlace(placedLayer, po);
+        PlacementObject snapTarget = null;
+        bool hasSingleSnap = connectionCount == 1;
 
-            if (!canRotate)
+        float allowedPen = 0f;
+
+        if (hasSingleSnap)
+        {
+            var c = selected.connections[0];
+
+            if (c.otherRoot != null)
+                snapTarget = c.otherRoot.owner;
+
+            float a = (c.myPoint != null) ? c.myPoint.allowedPenetration : 0f;
+            float b = (c.otherPoint != null) ? c.otherPoint.allowedPenetration : 0f;
+            allowedPen = Mathf.Min(a, b);
+        }
+
+        if (!isRotating && (Input.GetKeyDown(KeyCode.Q) || Input.GetKeyDown(KeyCode.E)))
+        {
+            isRotating = true;
+
+            rotationBefore = selected.transform.rotation;
+            positionBefore = selected.transform.position;
+
+            rotationPivot = hasSingleSnap && selected.connections[0].myPoint != null
+                ? selected.connections[0].myPoint.transform.position
+                : selected.transform.position;
+
+            selected.SetGhost();
+
+            bool canPlaceStart = selected.CanPlaceByRule(wallMask, snapTarget, allowedPen);
+            selected.SetGhostVisual(canPlaceStart);
+        }
+
+        if (!isRotating)
+            return;
+
+        float angle = 0f;
+        if (Input.GetKey(KeyCode.Q)) angle += 90f * Time.deltaTime;
+        if (Input.GetKey(KeyCode.E)) angle -= 90f * Time.deltaTime;
+
+        if (angle != 0f)
+        {
+            selected.transform.RotateAround(rotationPivot, Vector3.forward, angle);
+
+            bool canPlacePreview = selected.CanPlaceByRule(
+                wallMask,
+                snapTarget,
+                allowedPen
+            );
+
+            selected.SetGhostVisual(canPlacePreview);
+        }
+
+        if (Input.GetKeyUp(KeyCode.Q) || Input.GetKeyUp(KeyCode.E))
+        {
+            isRotating = false;
+
+            bool canPlaceFinal = selected.CanPlaceByRule(
+                wallMask,
+                snapTarget,
+                allowedPen
+            );
+
+            if (!canPlaceFinal)
             {
-                // »∏¿¸ ∫“∞° °Ê ø¯∑° ∞¢µµ∑Œ ∫π±Õ
-                target.rotation = originalRotation;
-                SetTempColor(po, Color.red);
+                selected.transform.rotation = rotationBefore;
+                selected.transform.position = positionBefore;
             }
-            else
-            {
-                // »∏¿¸ ∞°¥… °Ê º±≈√ ªˆ ¿Ø¡ˆ
-                SelectionManager.Instance.RefreshSelectedColor();
-            }
+
+            selected.SetPlaced();
+            selected.SetSelectedVisual();
+            RestorePhysics();
         }
     }
 
-
-    void SaveOriginalRotation(Transform target)
+    // =========================================================
+    // PREVIEW OBJECTS
+    // =========================================================
+    void EnsurePlacePreviewObjects()
     {
-        // ¿ÃπÃ ¿˙¿Âµ≈ ¿÷¿∏∏È µ§æÓæ≤¡ˆ æ ¿Ω
-        if (originalRotation == target.rotation)
+        if (ghost == null) CreateGhost();
+        if (previewPO == null) CreatePreviewObject();
+    }
+
+    void ClearPlacePreviewObjects()
+    {
+        if (ghost) Destroy(ghost);
+        if (previewPO) Destroy(previewPO.gameObject);
+
+        ghost = null;
+        previewPO = null;
+        placeSnapTarget = null;
+        placeHasSnap = false;
+        placeSnap = default;
+    }
+
+    void CreateGhost()
+    {
+        ghost = Instantiate(placementData.prefab);
+        ghost.name = "Ghost";
+        SetLayerRecursively(ghost, LayerMask.NameToLayer("Ghost"));
+
+        Destroy(ghost.GetComponent<PlacementObject>());
+
+        foreach (var col in ghost.GetComponentsInChildren<Collider2D>())
+            col.enabled = false;
+
+        SetGhostAlpha(0.4f);
+    }
+
+    void CreatePreviewObject()
+    {
+        var go = Instantiate(placementData.prefab);
+        SetLayerRecursively(go, LayerMask.NameToLayer("Ghost"));
+
+        previewPO = go.GetComponent<PlacementObject>();
+        previewPO.placementData = placementData;
+
+        foreach (var sr in go.GetComponentsInChildren<SpriteRenderer>())
+            sr.enabled = false;
+
+        foreach (var col in go.GetComponentsInChildren<Collider2D>())
+        {
+            col.enabled = true;
+            col.isTrigger = true;
+        }
+    }
+
+    void SetLayerRecursively(GameObject obj, int layer)
+    {
+        obj.layer = layer;
+        foreach (Transform child in obj.transform)
+            SetLayerRecursively(child.gameObject, layer);
+    }
+
+    void SetGhostAlpha(float alpha)
+    {
+        foreach (var sr in ghost.GetComponentsInChildren<SpriteRenderer>())
+        {
+            var c = sr.color;
+            c.a = alpha;
+            sr.color = c;
+        }
+    }
+
+    void SetGhostColor(bool canPlace)
+    {
+        Color c = canPlace ? Color.green : Color.red;
+        foreach (var sr in ghost.GetComponentsInChildren<SpriteRenderer>())
+            sr.color = new Color(c.r, c.g, c.b, 0.4f);
+    }
+
+    // =========================================================
+    // DELETE
+    // =========================================================
+    void TryDeleteSelected()
+    {
+        if (selected == null)
             return;
 
-        originalRotation = target.rotation;
+        if (isDragging)
+            return;
+
+        selected.BreakAllSnaps();
+        Destroy(selected.gameObject);
+
+        selected = null;
+        isRotating = false;
+        dragCandidate = false;
+        isDragging = false;
     }
 
-
-
-
-    Transform GetRotateTarget()
+    // =========================================================
+    // PICK (Ï†ëÏ†ê Ïò§ÏÑ†ÌÉù Î∞©ÏßÄ)
+    // =========================================================
+    PlacementObject PickPlacementObject(Vector2 mouseWorld)
     {
-        var tool = BuildToolManager.Instance.currentTool;
+        const float pickRadius = 0.08f;
 
-        if (tool == BuildTool.Place && ghost != null)
-            return ghost.transform;
+        var cols = Physics2D.OverlapCircleAll(mouseWorld, pickRadius, placedMask);
+        if (cols == null || cols.Length == 0)
+            return null;
 
-        if (tool == BuildTool.Select && SelectionManager.Instance.selected != null)
-            return SelectionManager.Instance.selected.transform;
+        PlacementObject best = null;
+        float bestScore = float.PositiveInfinity;
 
-        return null;
+        for (int i = 0; i < cols.Length; i++)
+        {
+            var col = cols[i];
+            if (col == null) continue;
+
+            var po = col.GetComponentInParent<PlacementObject>();
+            if (po == null) continue;
+
+            Vector2 closest = col.ClosestPoint(mouseWorld);
+            float score = (closest - mouseWorld).sqrMagnitude;
+
+            if (selected != null && po == selected)
+                score *= 0.25f;
+
+            if (score < bestScore)
+            {
+                bestScore = score;
+                best = po;
+            }
+        }
+
+        return best;
     }
-
-    void SetTempColor(PlacementObject obj, Color color)
-    {
-        foreach (var sr in obj.GetComponentsInChildren<SpriteRenderer>())
-            sr.color = color;
-    }
-
-    void RestoreSelectedColor(PlacementObject obj)
-    {
-        // º±≈√ ¡ﬂ¿Ã∏È ≥Î∂ıªˆ, æ∆¥œ∏È ±‚∫ªªˆ
-        if (SelectionManager.Instance.selected == obj)
-            SelectionManager.Instance.Select(obj);
-        else
-            SetTempColor(obj, Color.white);
-    }
-
-
 }

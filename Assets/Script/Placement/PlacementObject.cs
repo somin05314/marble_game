@@ -1,79 +1,218 @@
+ï»¿using System.Collections.Generic;
+using System;
 using UnityEngine;
+
+public enum PhysicsType
+{
+    Static,
+    DynamicNoGravity,
+    DynamicGravity
+}
 
 public class PlacementObject : MonoBehaviour
 {
-    public GameObject prefab;
+    [HideInInspector] public List<SnapConnection> connections = new();
+    public PlacementData placementData;
 
-    [Header("Placement")]
-    public Collider2D placementCollider;   // Visual¿¡ ÀÖ´Â Collider
+    // ìºì‹œ
+    Collider2D[] colliders;
+    SpriteRenderer[] renderers;
 
+    // âœ… Overlap ê²°ê³¼ ë°°ì—´ ì¬ì‚¬ìš© (í• ë‹¹ ë°©ì§€)
+    readonly Collider2D[] overlapResults = new Collider2D[16];
+
+    [Header("Physics")]
     public PhysicsType physicsType = PhysicsType.Static;
 
-    [Header("Snap")]
-    public Transform[] snapPoints;
-    public bool isSnapped;
 
-    [HideInInspector]
-    public PlacementObject snappedTo; // ½º³ÀµÈ »ó´ë
+    [SerializeField, HideInInspector]
+    string persistentId;
 
-    // Awake¿¡¼­ Collider Ã£Áö ¾Ê´Â´Ù
-    // void Awake() { }
+    public string PersistentId => persistentId;
 
-    public bool CanPlace(LayerMask blockLayer, PlacementObject self = null)
+    public void EnsureId()
     {
-        if (placementCollider == null)
-            return false;
+        if (string.IsNullOrEmpty(persistentId))
+            persistentId = Guid.NewGuid().ToString();
+    }
 
-        ContactFilter2D filter = new ContactFilter2D();
-        filter.SetLayerMask(blockLayer);
-        filter.useTriggers = true;
+    public void SetPersistentId(string id) => persistentId = id;
 
-        Collider2D[] results = new Collider2D[10];
-        int count = placementCollider.OverlapCollider(filter, results);
+    public bool HasMultipleConnections => connections.Count >= 2;
 
-        for (int i = 0; i < count; i++)
+    void Awake()
+    {
+        EnsureId();
+        colliders = GetComponentsInChildren<Collider2D>(true);
+        renderers = GetComponentsInChildren<SpriteRenderer>(true);
+
+        // SnapRoot/SnapPoint owner ì—°ê²° (í•„ìˆ˜ ì´ˆê¸°í™”)
+        var roots = GetComponentsInChildren<SnapRoot>(true);
+        foreach (var root in roots)
         {
-            var other = results[i].GetComponentInParent<PlacementObject>();
-            if (other == null || other == self)
-                continue;
+            root.owner = this;
+            foreach (var p in root.GetComponentsInChildren<SnapPoint>(true))
+                p.root = root;
+        }
+    }
 
-            // ½º³ÀµÈ ´ë»ó¸¸ ¿¹¿Ü °¡´É
-            if (self != null && self.snappedTo == other)
+    // =========================
+    // Snap
+    // =========================
+    public void BreakAllSnaps()
+    {
+        var snapshot = new List<SnapConnection>(connections);
+
+        foreach (var c in snapshot)
+        {
+            if (c.otherRoot != null && c.otherRoot.owner != null)
             {
-                // ½º³À Æ÷ÀÎÆ® ±ÙÃ³ °ãÄ§¸¸ Çã¿ë
-                if (IsOverlapNearSnap(self, other))
-                    continue;
+                c.otherRoot.owner.connections.RemoveAll(
+                    x => x.otherRoot == c.myRoot
+                );
             }
+        }
 
-            // ±× ¿Ü ¸ğµç °ãÄ§Àº ºÒÇã
-            return false;
+        connections.Clear();
+    }
+
+    // placedLayer ì œê±°(ì•ˆ ì“°ì´ë‹ˆê¹Œ)
+  
+    // =========================
+    // Modes
+    // =========================
+    public void SetGhost()
+    {
+        SetLayerRecursively(gameObject, LayerMask.NameToLayer("Ghost"));
+
+        foreach (var col in colliders)
+        {
+            if (col == null) continue;
+            col.enabled = true;
+            col.isTrigger = true;
+        }
+
+        SetGhostVisual(true);
+    }
+
+    public void SetPlaced()
+    {
+        SetLayerRecursively(gameObject, LayerMask.NameToLayer("PlacedObject"));
+
+        foreach (var col in colliders)
+        {
+            if (col == null) continue;
+            col.enabled = true;
+            col.isTrigger = false;
+        }
+
+        // Staticì´ë©´ velocity/angVel ê±´ë“œë¦¬ë©´ ê²½ê³  ë‚˜ë‹ˆê¹Œ ë°©ì–´
+        var rb = GetComponent<Rigidbody2D>();
+        if (rb != null && rb.bodyType != RigidbodyType2D.Static)
+        {
+            rb.velocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+        }
+
+        SetNormalVisual();
+    }
+
+    // =========================
+    // Visual
+    // =========================
+    public void SetGhostVisual(bool canPlace)
+    {
+        Color c = canPlace ? Color.green : Color.red;
+
+        foreach (var sr in renderers)
+        {
+            if (sr == null) continue;
+            sr.color = new Color(c.r, c.g, c.b, 0.4f);
+        }
+    }
+
+    public void SetNormalVisual()
+    {
+        foreach (var sr in renderers)
+        {
+            if (sr == null) continue;
+            sr.color = Color.white;
+        }
+    }
+
+    public void SetSelectedVisual()
+    {
+        foreach (var sr in renderers)
+        {
+            if (sr == null) continue;
+            sr.color = new Color(1f, 1f, 0.6f, 1f);
+        }
+    }
+
+    public void SetPlacedVisual() => SetNormalVisual();
+
+    static void SetLayerRecursively(GameObject obj, int layer)
+    {
+        obj.layer = layer;
+        foreach (Transform child in obj.transform)
+            SetLayerRecursively(child.gameObject, layer);
+    }
+
+    public bool CanPlaceByRule(
+    LayerMask wallLayer,
+    PlacementObject snapTarget,
+    float allowedSnapPenetration = 0f
+)
+    {
+        ContactFilter2D filter = new();
+        filter.useTriggers = true; // âœ… Ghost(Trigger) ìƒíƒœì—ì„œë„ Overlapì´ ì¡íˆê²Œ
+
+        for (int c = 0; c < colliders.Length; c++)
+        {
+            var col = colliders[c];
+            if (col == null || !col.enabled) continue;
+
+            int count = col.OverlapCollider(filter, overlapResults);
+
+            for (int i = 0; i < count; i++)
+            {
+                var hit = overlapResults[i];
+                if (hit == null) continue;
+
+                // ìê¸° ìì‹  ë¬´ì‹œ
+                if (hit.transform.IsChildOf(transform))
+                    continue;
+
+                int hitLayer = hit.gameObject.layer;
+
+                // ë²½ì€ ë¬´ì¡°ê±´ ë¶ˆê°€
+                if (((1 << hitLayer) & wallLayer) != 0)
+                    return false;
+
+                // PlacementObject ì•„ë‹Œ ê±´(ì˜ˆ: Marble) ì¼ë‹¨ ë¬´ì‹œ
+                var other = hit.GetComponentInParent<PlacementObject>();
+                if (other == null) continue;
+
+                // ìŠ¤ëƒ… ëŒ€ìƒì€ "ì¹¨íˆ¬ í—ˆìš©ì¹˜"ê¹Œì§€ë§Œ í—ˆìš©
+                if (snapTarget != null && other == snapTarget)
+                {
+                    var d = col.Distance(hit);
+                    if (d.isOverlapped)
+                    {
+                        float penetration = -d.distance; // ê²¹ì¹œ ê¹Šì´
+                        if (penetration > allowedSnapPenetration)
+                            return false;
+                    }
+                    continue;
+                }
+
+                // ê·¸ ì™¸ PlacementObjectì™€ ê²¹ì¹˜ë©´ ë¶ˆê°€
+                return false;
+            }
         }
 
         return true;
     }
 
-    bool IsOverlapNearSnap(
-    PlacementObject self,
-    PlacementObject other,
-    float allowRadius = 0.25f // Æ©´× Æ÷ÀÎÆ®
-)
-    {
-        if (self.snapPoints == null || other.snapPoints == null)
-            return false;
-
-        foreach (var mySnap in self.snapPoints)
-        {
-            foreach (var otherSnap in other.snapPoints)
-            {
-                float dist = Vector2.Distance(mySnap.position, otherSnap.position);
-                if (dist <= allowRadius)
-                    return true;
-            }
-        }
-
-        return false;
-    }
-
 
 }
-

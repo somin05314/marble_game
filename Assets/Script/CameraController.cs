@@ -16,15 +16,32 @@ public class PuzzleCamera : MonoBehaviour
 
     void Update()
     {
+        // 카메라는 항상 허용
         HandlePan();
         HandleZoom();
-        HandleReset();
+
+        // 리셋만 Build 모드에서
+        if (GameModeManager.Instance.currentMode == GameMode.Build)
+            HandleReset();
     }
+
+    bool IsMousePositionValid()
+    {
+        Vector3 mouse = Input.mousePosition;
+
+        return mouse.x >= 0 && mouse.y >= 0 &&
+               mouse.x <= Screen.width &&
+               mouse.y <= Screen.height;
+    }
+
 
     Vector3 GetMouseWorld()
     {
+        if (!IsMousePositionValid())
+            return lastMouseWorld; // 이전 값 유지
+
         Vector3 mouse = Input.mousePosition;
-        mouse.z = -cam.transform.position.z; 
+        mouse.z = -cam.transform.position.z;
         return cam.ScreenToWorldPoint(mouse);
     }
 
