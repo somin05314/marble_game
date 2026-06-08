@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f56968382141a93469be2def43af9d13, type: 3}
+  m_Name: Stage02
+  m_EditorClassIdentifier: 
+  maxRails: 4
+  marblePrefab: {fileID: 594671617913871613, guid: 1392d59af90faa34287619d6a5bc4a02, type: 3}
+  allowedPlacements:
+  - {fileID: 11400000, guid: 0796f1e0854425445b2da7d88c6760cd, type: 2}
+  placementLimits:
+  - data: {fileID: 11400000, guid: 0796f1e0854425445b2da7d88c6760cd, type: 2}
+    maxCount: 1
+  defaultPlacementIndex: 0
+  cameraLimits:
+    zoomInPos: {x: 0, y: 2}
+    zoomInZoom: 28
+    boundsCenter: {x: 0, y: 1}
+    boundsHalfY: 34
+    introStartPose:
+      pos: {x: 0, y: 0}
+      zoom: 25
+    zoomOutPose:
+      pos: {x: 0, y: 2}
+      zoom: 28
+    maxZoomCap: 28

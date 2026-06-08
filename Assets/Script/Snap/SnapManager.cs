@@ -4,24 +4,37 @@ public static class SnapManager
 {
     static int GhostLayer => LayerMask.NameToLayer("Ghost");
 
+    static bool IsOccupied(SnapPoint p)
+    {
+        if (p == null || p.root == null || p.root.owner == null) return true;
+        var owner = p.root.owner;
+
+        // owner.connections에서 "내 점"으로 잡힌 게 있으면 점유
+        return owner.connections.Exists(c => c.myPoint == p);
+    }
+
     /// <summary>
-    /// Ghost / Preview 전용 스냅 계산 (가장 가까운 1쌍만 반환)
+    /// Ghost/Preview 스냅 계산: 가장 가까운 1쌍 + 스냅 대상 + 허용 관통
+    /// (점유된 포인트는 후보 제외)
     /// </summary>
-    public static bool TryGetSnapPreview(
-        PlacementObject previewObj,
-        out SnapPreviewPair best
-    )
+    public static bool TryGetBestSnapPreview(
+    PlacementObject previewObj,
+    out SnapPreviewPair best,
+    out PlacementObject snapTarget,
+    out float allowedSnapPenetration
+)
     {
         best = default;
+        snapTarget = null;
+        allowedSnapPenetration = 0f;
 
-        if (previewObj == null)
-            return false;
+        if (previewObj == null) return false;
 
-        // ✅ 내 스냅 포인트들
-        var myPoints = previewObj.GetComponentsInChildren<SnapPoint>();
+        var myPoints = previewObj.GetComponentsInChildren<SnapPoint>(true);
+        var allPoints = Object.FindObjectsOfType<SnapPoint>(true);
 
-        // ✅ 씬 전체 스냅 포인트 (LINQ 제거: GC 감소)
-        var allPoints = Object.FindObjectsOfType<SnapPoint>();
+        // ✅ 아직 어디에도 연결 안 된 “떠있는 블록”이면 AnchorRoot에만 스냅 허용
+        bool requireAnchorTarget = (previewObj.connections == null || previewObj.connections.Count == 0);
 
         float bestDistSq = float.PositiveInfinity;
         bool found = false;
@@ -29,42 +42,38 @@ public static class SnapManager
         for (int i = 0; i < myPoints.Length; i++)
         {
             var my = myPoints[i];
-            if (my == null || my.root == null || my.root.owner == null)
-                continue;
+            if (my == null || my.root == null || my.root.owner == null) continue;
+
+            if (IsOccupied(my)) continue;
 
             Vector3 myPos = my.transform.position;
 
             for (int j = 0; j < allPoints.Length; j++)
             {
                 var other = allPoints[j];
-                if (other == null || other.root == null || other.root.owner == null)
-                    continue;
+                if (other == null || other.root == null || other.root.owner == null) continue;
 
                 var otherOwner = other.root.owner;
 
-                // ✅ 자기 자신(프리뷰 오브젝트) 제외
-                if (otherOwner == previewObj)
-                    continue;
+                if (otherOwner == previewObj) continue;
+                if (otherOwner.gameObject.layer == GhostLayer) continue;
+                if (!otherOwner.gameObject.activeInHierarchy) continue;
 
-                // ✅ 고스트 레이어 제외 (상대 오브젝트 기준)
-                if (otherOwner.gameObject.layer == GhostLayer)
-                    continue;
+                if (IsOccupied(other)) continue;
 
-                // ✅ (옵션) 비활성 오브젝트 제외
-                if (!otherOwner.gameObject.activeInHierarchy)
+                // ✅ (A 적용) 떠있는 상태면 AnchorRoot만 허용
+                if (requireAnchorTarget && !other.IsAnchorRoot)
                     continue;
 
                 Vector3 otherPos = other.transform.position;
 
-                // ✅ 거리 비교: sqrt 없는 sqrMagnitude
                 float radius = Mathf.Min(my.snapRadius, other.snapRadius);
                 float radiusSq = radius * radius;
 
                 Vector3 delta = otherPos - myPos;
                 float distSq = delta.sqrMagnitude;
 
-                if (distSq > radiusSq)
-                    continue;
+                if (distSq > radiusSq) continue;
 
                 if (distSq < bestDistSq)
                 {
@@ -77,6 +86,13 @@ public static class SnapManager
                         otherPoint = other,
                         previewObjectPos = previewObj.transform.position + delta
                     };
+
+                    snapTarget = otherOwner;
+
+                    allowedSnapPenetration = Mathf.Min(
+                        my.allowedPenetration,
+                        other.allowedPenetration
+                    );
                 }
             }
         }
@@ -84,7 +100,36 @@ public static class SnapManager
         return found;
     }
 
-    public static void CommitSnapDirect(
+
+    /// <summary>
+    /// GridPlacer(드래그/확정)에서 쓰기 편한 래퍼
+    /// </summary>
+    public static PlacementObject GetSnapTargetIfAny(
+        PlacementObject obj,
+        out float allowedSnapPenetration,
+        out SnapPreviewPair pair
+    )
+    {
+        if (TryGetBestSnapPreview(obj, out pair, out var target, out allowedSnapPenetration))
+            return target;
+
+        pair = default;
+        allowedSnapPenetration = 0f;
+        return null;
+    }
+
+    public static PlacementObject GetSnapTargetIfAny(
+        PlacementObject obj,
+        out float allowedSnapPenetration
+    )
+    {
+        return GetSnapTargetIfAny(obj, out allowedSnapPenetration, out _);
+    }
+
+    /// <summary>
+    /// 점유 규칙 포함 커밋(안전)
+    /// </summary>
+    public static bool CommitSnapDirect(
         PlacementObject myObj,
         SnapRoot myRoot,
         SnapPoint myPoint,
@@ -93,13 +138,16 @@ public static class SnapManager
         SnapPoint otherPoint
     )
     {
-        if (myObj == null || otherObj == null) return;
-        if (myObj == otherObj) return;
+        if (myObj == null || otherObj == null) return false;
+        if (myObj == otherObj) return false;
+        if (myRoot == null || otherRoot == null) return false;
+        if (myPoint == null || otherPoint == null) return false;
 
-        if (myRoot == null || otherRoot == null) return;
-        if (myPoint == null || otherPoint == null) return;
+        // ✅ 점유면 실패
+        if (IsOccupied(myPoint) || IsOccupied(otherPoint))
+            return false;
 
-        // ✅ 중복 커밋 방지 (같은 점 조합이 이미 있으면 추가하지 않음)
+        // ✅ 중복 방지
         bool already =
             myObj.connections.Exists(c =>
                 c.otherRoot == otherRoot &&
@@ -108,8 +156,7 @@ public static class SnapManager
                 c.myPoint == myPoint
             );
 
-        if (already)
-            return;
+        if (already) return false;
 
         var c1 = new SnapConnection
         {
@@ -129,6 +176,7 @@ public static class SnapManager
 
         myObj.connections.Add(c1);
         otherObj.connections.Add(c2);
-    }
 
+        return true;
+    }
 }

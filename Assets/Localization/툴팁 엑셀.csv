@@ -1,0 +1,469 @@
+﻿key,ko,en,ja,zhCN,zhTW,ru,de
+tooltip.option,옵션 메뉴 열기,Options,オプション,选项,選項,Настройки,Optionen
+tooltip.back,이전 화면으로 돌아가기,Go Back,前の画面に戻る,返回,返回,Назад,Zurück
+tooltip.Tutorial,튜토리얼 열기,Tutorial,チュートリアル,教程,教學,Обучение,Tutorial
+tooltip.Play,게임 시작,Start Game,ゲーム開始,开始游戏,開始遊戲,Начать игру,Spiel Starten
+tooltip.FullScreen,전체 보기,View Entire Stage,ステージ全体を見る,全景查看,查看整個關卡,Показать весь уровень,Gesamte Bühne Anzeigen
+tooltip.ResetCamera,카메라 크기 리셋,Reset Camera,カメラをリセット,重置视角,重設視角,Сбросить камеру,Kamera Zurücksetzen
+tooltip.rotate,회전,Rotate,回転,旋转,旋轉,Повернуть,Drehen
+tooltip.flip_x,좌우 반전,Flip Horizontally,左右反転,左右反転 水平翻转,左右翻轉,Отразить по горизонтали,Horizontal Spiegeln
+tooltip.flip_y,상하 반전,Flip Vertically,上下反転,上下反転 垂直翻转,上下翻轉,Отразить по вертикали,Vertikal Spiegeln
+tooltip.delete,삭제,Delete,削除,删除,刪除,Удалить,Löschen
+tooltip.grid_on,그리드 표시,Show Grid,グリッドを表示,显示网格,顯示網格,Показать сетку,Raster Anzeigen
+tooltip.grid_off,그리드 숨기기,Hide Grid,グリッドを非表示,隐藏网格,隱藏網格,Скрыть сетку,Raster Ausblenden
+tooltip.BuildMode,배치 모드,Build Mode,配置モード,建造模式,建造模式,Режим строительства,Baumodus
+tooltip.ReturnToWorkView,배치 화면으로 복귀,Back to Build View,配置ビューに戻る,返回建造界面,返回建造畫面,Вернуться в режим строительства,Zurück zum Baumodus
+tooltip.rail_continue_on,레일 연속 설치 켜기,Continuous Rail: ON,レール連続設置をオン,连续轨道：开,連續鋪設軌道：開,Непрерывная установка рельсов: ВКЛ,Kontinuierliche Schienenplatzierung: EIN
+tooltip.rail_continue_off,레일 연속 설치 끄기,Continuous Rail: OFF,レール連続設置をオフ,连续轨道：关,連續鋪設軌道：關,Непрерывная установка рельсов: ВЫКЛ,Kontinuierliche Schienenplatzierung: AUS
+tooltip.skip,건너뛰기,Skip,スキップ,跳过,跳過,Пропустить,Überspringen
+,,,,,,,
+hint_place_confirm_cancel,좌클릭: 설치 / 우클릭: 취소,Left Click: Place / Right Click: Cancel,左クリック: 配置 / 右クリック: キャンセル,左键：放置 / 右键：取消,左鍵：放置／右鍵：取消,ЛКМ: Разместить / ПКМ: Отмена,Linksklick: Platzieren / Rechtsklick: Abbrechen
+hint_rail_place,좌클릭: 설치,Left Click: Place,左クリック: 配置,左键：放置,左鍵：放置,ЛКМ: Разместить,Linksklick: Platzieren
+hint_rail_drag,드래그: 조정,Drag: Adjust,ドラッグ: 調整,拖动：调整,拖曳：調整,Перетаскивание: Настроить,Ziehen: Anpassen
+hint_rail_place_and_drag,좌클릭: 설치 / 드래그: 조정,Left Click: Place / Drag: Adjust,左クリック: 配置 / ドラッグ: 調整,左键：放置 / 拖动：调整,左鍵：放置／拖曳：調整,ЛКМ: Разместить / Перетаскивание: Настроить,Linksklick: Platzieren / Ziehen: Anpassen
+hint_po_select_and_move,클릭: 선택 / 드래그: 이동,Click: Select / Drag: Move,クリック: 選択 / ドラッグ: 移動,点击：选择 / 拖动：移动,點擊：選擇／拖曳：移動,Щелчок: Выбрать / Перетаскивание: Переместить,Klicken: Auswählen / Ziehen: Bewegen
+hint_rail_select,클릭: 선택,Click: Select,クリック: 選択,点击：选择,點擊：選擇,Щелчок: Выбрать,Klicken: Auswählen
+hint_po_drag_cancel,드래그 중 / 우클릭: 취소,Dragging / Right Click: Cancel,ドラッグ中 / 右クリックでキャンセル,拖动中 / 右键取消,拖曳中／右鍵：取消,Перетаскивание / ПКМ: Отмена,Ziehen / Rechtsklick: Abbrechen
+hint_rail_limit,레일 없음,No rails,レールなし,无可用轨道,軌道不足,Нет рельсов,Keine Schienen
+chapter1,챕터 1,Chapter 1,第1章,第1章,第1章,Глава 1,Kapitel 1
+chapter2,챕터 2,Chapter 2,第2章,第2章,第2章,Глава 2,Kapitel 2
+chapter3,챕터 3,Chapter 3,第3章,第3章,第3章,Глава 3,Kapitel 3
+,,,,,,,
+,,,,,,,
+menu.play,시작하기,Play,プレイ,开始,開始遊戲,Начать игру,Spiel Starten
+menu.options,설정,Options,設定,设置,設定,Настройки,Einstellungen
+menu.exit,종료,Exit,終了,退出,離開遊戲,Выход,Beenden
+menu.continue,이어하기,Continue,続ける,继续,繼續,Продолжить,Fortsetzen
+,,,,,,,
+option.sound,사운드,Sound,サウンド,声音,聲音,Звук,Ton
+option.master,전체 음량,Master,マスター音量,主音量,主音量,Общая громкость,Gesamtlautstärke
+option.sfx,효과음,SFX,効果音,音效,音效,Звуковые эффекты,Soundeffekte
+option.bgm,배경음,BGM,BGM,背景音乐,背景音樂,Фоновая музыка,Hintergrundmusik
+option.ui,UI 사운드,UI Sound,UIサウンド,界面音效,介面音效,Звуки интерфейса,UI-Sounds
+,,,,,,,
+option.cursor,커서 크기,Cursor Size,カーソル,光标大小,游標大小,Размер курсора,Cursorgröße
+option.cursor_small,작게,Small,小,小,小,Маленький,Klein
+option.cursor_medium,보통,Medium,中,中,中,Средний,Mittel
+option.cursor_large,크게,Large,大,大,大,Большой,Groß
+,,,,,全螢幕,Полноэкранный режим,Vollbild
+option.fullscreen,전체화면,Fullscreen,フルスクリーン,全屏,語言,Язык,Sprache
+option.language,언어,Language,言語,语言,操作提示,Подсказки управления,Bedienungshinweise
+option.interaction_hint,조작 힌트,Gameplay Hints,操作ヒント,操作提示,相機特效,Эффекты камеры,Kameraeffekte
+option.camera_effects,카메라 연출,Camera Effects,カメラ演出,镜头演出,鏡頭演出,Эффекты камеры,Kameraeffekte
+,,,,,,,
+,,,,,,,
+tutorial.panel_0,"레일과 오브젝트를 배치해
+구슬이 목표 지점에 도달하도록 경로를 만들어 보세요.
+
+모든 목표 지점에 구슬을 넣으면
+스테이지를 클리어합니다.
+
+Play 버튼을 눌러
+시뮬레이션을 시작하세요.","Place rails and objects
+to create a path for the marble
+to reach the goal.
+
+Guide the marble into all goals
+to clear the stage.
+
+Press the Play button
+to start the simulation.","レールやオブジェクトを配置して
+ボールがゴールにたどり着くように
+ルートを作りましょう。
+
+すべてのゴールにボールを入れると
+ステージクリアになります。
+
+Playボタンを押して
+シミュレーションを開始できます。","放置轨道和物体，
+为弹珠创建一条通往目标的路径。
+
+将弹珠引导到所有目标点，
+即可通关关卡。
+
+按下 Play 按钮，
+开始模拟。","放置軌道與物件，
+為彈珠創造一條通往目標的路徑。
+
+將彈珠引導至所有目標點，
+即可通關關卡。
+
+按下 Play 按鈕，
+開始模擬。","Размещайте рельсы и объекты,
+чтобы создать путь для шарика
+к цели.
+
+Проведите шарик через все цели,
+чтобы пройти уровень.
+
+Нажмите кнопку Play,
+чтобы начать симуляцию.","Platziere Schienen und Objekte,
+um einen Weg für die Kugel
+zum Ziel zu erstellen.
+
+Führe die Kugel durch alle Ziele,
+um das Level abzuschließen.
+
+Drücke die Play-Taste,
+um die Simulation zu starten."
+tutorial.panel_1,"레일 시작 지점을 클릭하여 설치를 시작하세요.
+
+좌클릭: 설치 시작 / 설치 완료 
+우클릭: 취소
+
+좌클릭을 한 번 더 하면 설치가 완료됩니다.","Click the rail start point
+to start placing the rail.
+
+Left Click: Start Placement / Finish Placement  
+Right Click: Cancel
+
+Click once more to complete the placement.","レールの開始位置をクリックして
+設置を開始します。
+
+左クリック：設置開始 / 設置完了  
+右クリック：キャンセル
+
+もう一度クリックすると
+設置が完了します。","点击轨道的起点，
+开始放置轨道。
+
+左键：开始放置 / 完成放置  
+右键：取消
+
+再次点击左键即可完成放置。","點擊軌道的起點，
+開始放置軌道。
+
+左鍵：開始放置 / 完成放置
+右鍵：取消
+
+再次點擊左鍵即可完成放置。","Щёлкните по начальной точке рельса,
+чтобы начать размещение.
+
+ЛКМ: Начать размещение / Завершить размещение
+ПКМ: Отмена
+
+Щёлкните левой кнопкой мыши ещё раз,
+чтобы завершить размещение.","Klicke auf den Startpunkt der Schiene,
+um die Platzierung zu beginnen.
+
+Linksklick: Platzierung starten / Platzierung abschließen
+Rechtsklick: Abbrechen
+
+Klicke erneut mit der linken Maustaste,
+um die Platzierung abzuschließen."
+tutorial.panel_2,"설치된 레일은 끝점을 드래그하여
+수정할 수 있습니다.
+
+끝점 드래그: 위치 조정  
+
+레일 선택 + X 버튼: 삭제","You can adjust rails by dragging their endpoints.
+
+Drag Endpoint: Adjust  
+
+Select Rail + X Button: Delete","設置されたレールは端点をドラッグして
+調整できます。
+
+端点ドラッグ：位置調整  
+
+レール選択 + Xボタン：削除","已放置的轨道可以通过拖动端点进行调整。
+
+拖动端点：调整位置  
+
+选择轨道 + X 按钮：删除","已放置的軌道可以拖曳端點
+來進行調整。
+
+拖曳端點：調整位置
+
+選取軌道 + X 按鍵：刪除","Установленные рельсы можно
+настраивать, перетаскивая их концы.
+
+Перетащить конец: Изменить положение
+
+Выбрать рельс + клавиша X: Удалить","Bereits platzierte Schienen können
+durch Ziehen ihrer Endpunkte angepasst werden.
+
+Endpunkt ziehen: Position anpassen
+
+Schiene auswählen + Taste X: Löschen"
+tutorial.panel_3,"왼쪽 패널에서 오브젝트를 선택하세요.
+
+좌클릭: 설치  
+우클릭: 취소  
+드래그: 이동
+
+설치된 오브젝트는 드래그하여 
+자유롭게 이동할 수 있습니다.","Select an object from the left panel.
+
+Left Click: Place  
+Right Click: Cancel  
+Drag: Move
+
+Placed objects can be freely moved.","左側のパネルからオブジェクトを選択してください。
+
+左クリック：設置  
+右クリック：キャンセル  
+ドラッグ：移動
+
+設置したオブジェクトは
+ドラッグで自由に移動できます。","从左侧面板选择一个物体。
+
+左键：放置  
+右键：取消  
+拖动：移动
+
+已放置的物体可以自由拖动移动。","從左側面板選擇一個物件。
+
+左鍵：放置
+右鍵：取消
+拖曳：移動
+
+已放置的物件可以自由拖曳移動。","Выберите объект на левой панели.
+
+ЛКМ: Разместить
+ПКМ: Отмена
+Перетаскивание: Переместить
+
+Размещённые объекты можно
+свободно перемещать.","Wähle ein Objekt aus dem linken Panel aus.
+
+Linksklick: Platzieren
+Rechtsklick: Abbrechen
+Ziehen: Bewegen
+
+Platzierte Objekte können
+frei bewegt werden."
+tutorial.panel_4,"오브젝트를 선택하면 조작 버튼이 표시됩니다.
+
+A: 미리보기
+S: 플립
+D: 단계 증가
+F: 단계 감소
+G: 삭제","When you select an object, control buttons will appear.
+
+A: Preview
+S: Flip
+D: Level Up
+F: Level Down
+G: Delete","オブジェクトを選択すると操作ボタンが表示されます。
+
+A: プレビュー
+S: フリップ
+D: レベルアップ
+F: レベルダウン
+G: 削除","选择物体后，将显示操作按钮。
+
+A: 预览
+S: 翻转
+D: 提高等级
+F: 降低等级
+G: 删除","選取物件後，
+將顯示操作按鈕。
+
+A：預覽
+S：翻轉
+D：提高等級
+F：降低等級
+G：刪除","После выбора объекта
+появятся кнопки управления.
+
+A: Предпросмотр
+S: Отразить
+D: Повысить уровень
+F: Понизить уровень
+G: Удалить","Wenn ein Objekt ausgewählt ist,
+werden Steuerungstasten angezeigt.
+
+A: Vorschau
+S: Spiegeln
+D: Stufe Erhöhen
+F: Stufe Verringern
+G: Löschen"
+tutorial.panel_5,"레일을 설치할 때 표시되는 연결 지점에 맞추면
+오브젝트에 자동으로 연결됩니다.
+
+연결된 상태에서 오브젝트를 이동하면
+레일도 함께 이동합니다.","Align the rail with the highlighted connection point
+to automatically connect it to the object.
+
+When you move a connected object,
+the rail moves with it.","レールを設置する際に表示される接続ポイントに合わせると、
+オブジェクトに自動的に接続されます。
+
+接続されたオブジェクトを移動すると、
+レールも一緒に移動します。","将轨道对准安装时显示的连接点，
+即可自动连接到物体。
+
+在连接状态下移动物体时，
+轨道也会随之一起移动。","將軌道對準高亮顯示的連接點，
+即可自動連接到物件。
+
+移動已連接的物件時，
+軌道也會一起移動。","Совместите рельс с подсвеченной
+точкой соединения, чтобы он
+автоматически подключился к объекту.
+
+При перемещении подключённого объекта
+рельс будет двигаться вместе с ним.","Richte die Schiene an dem
+hervorgehobenen Verbindungspunkt aus,
+um sie automatisch mit dem Objekt zu verbinden.
+
+Wird ein verbundenes Objekt bewegt,
+bewegt sich die Schiene mit."
+tutorial.panel_6,"자물쇠 아이콘이 있는 오브젝트는
+이동하거나 조작할 수 없습니다.
+
+구슬이 오브젝트의 스위치를 누르면
+오브젝트가 작동합니다.","Objects with a lock icon cannot be moved or interacted with.
+
+When a marble presses an object's switch,
+the object activates.","ロックアイコンが付いているオブジェクトは
+移動や操作ができません。
+
+ボールがオブジェクトのスイッチを押すと、
+オブジェクトが作動します。","带有锁定图标的物体无法移动或进行操作。
+
+当小球按下物体的开关时，
+物体会被激活。","帶有鎖定圖示的物件
+無法移動或操作。
+
+當彈珠按下物件的開關時，
+物件將會啟動。","Объекты со значком замка
+нельзя перемещать или настраивать.
+
+Когда шарик нажимает переключатель объекта,
+объект активируется.","Objekte mit einem Schlosssymbol
+können nicht bewegt oder bearbeitet werden.
+
+Wenn eine Kugel den Schalter eines Objekts betätigt,
+wird das Objekt aktiviert."
+,,,,,,,
+tutorial.top_0,0. 목표,0. Objective,0. 目標,0. 目标,0. 目標,0. Цель,0. Ziel
+tutorial.top_1,1. 레일 설치,1. Rail Placement,1. レール設置,1. 轨道放置,1. 軌道放置,1. Размещение рельсов,1. Schienen Platzieren
+tutorial.top_2,2. 레일 조작,2. Rail Controls,2. レール操作,2. 轨道操作,2. 軌道操作,2. Управление рельсами,2. Schienensteuerung
+tutorial.top_3,3. 오브젝트 설치,3. Object Placement,3. オブジェクト設置,3. 物体放置,3. 物件放置,3. Размещение объектов,3. Objektplatzierung
+tutorial.top_4,4. 오브젝트 조작,4. Object Controls,4. オブジェクト操作,4. 物体操作,4. 物件操作,4. Управление объектами,4. Objektsteuerung
+tutorial.top_5,5. 레일 연결 & 오브젝트 작동,5. Rail Connection & Object Activation,5. レール接続 & オブジェクト作動,5. 轨道连接 & 物体激活,5. 軌道連接與物件啟動,5. Соединение рельсов и активация объектов,5. Schienenverbindung & Objektaktivierung
+tutorial.top_6,6. 잠긴 오브젝트,6. Locked Objects,6. ロックされたオブジェクト,6. 已锁定的物体,6. 鎖定物件,6. Заблокированные объекты,6. Gesperrte Objekte
+tutorial.top_7,조작 가이드,Controls,操作方法,操作说明,操作指南,Руководство по управлению,Steuerung
+,,,,,,,
+toast.demo_end,데모를 플레이해 주셔서 감사합니다! 더 많은 퍼즐이 기다리는 MarbleFlow 본편을 확인해 보세요,Thank you for playing the demo! Check out the full version of MarbleFlow for even more puzzles.,体験版をプレイしていただき、ありがとうございます！さらに多くのパズルが待っているMarbleFlow製品版をぜひチェックしてみてください。,感谢游玩试玩版！欢迎体验 MarbleFlow 正式版，更多谜题等着你来挑战。,感謝遊玩體驗版！歡迎體驗 MarbleFlow 正式版，更多謎題等著您來挑戰。,"Спасибо за прохождение демоверсии! Попробуйте полную версию MarbleFlow, где вас ждёт ещё больше головоломок.",Vielen Dank fürs Spielen der Demo! Entdecke die Vollversion von MarbleFlow mit noch mehr Rätseln.
+toast.stage_locked,,,,,,,
+,,,,,,,
+tooltip.Redo,다시 실행,Redo,やり直し,重做,重做,Повторить,Wiederholen
+tooltip.Undo,실행 취소,Undo,元に戻す,撤销,復原,Отменить действие,Rückgängig
+,,,,,,,
+tooltip.UiShow,UI 표시,Show UI,UIを表示,显示界面,顯示介面,Показать интерфейс,UI Anzeigen
+tooltip.UiHide,UI 숨기기,Hide UI,UIを非表示,隐藏界面,隱藏介面,Скрыть интерфейс,UI Ausblenden
+,,,,,,,
+tooltip.hint_next,다음 힌트 보기,Show next hint step,次のヒントを見る,显示下一步提示,顯示下一步提示,Показать следующую подсказку,Nächsten Hinweis Anzeigen
+tooltip.hint_unavailable,더 이상 힌트가 없습니다,No more hints available,これ以上ヒントはありません,没有更多提示,沒有更多提示,Больше подсказок нет,Keine Weiteren Hinweise
+tooltip.hint_show,힌트 보기,Show hint,ヒントを表示,显示提示,顯示提示,Подсказку Показать,Hinweis Anzeigen
+tooltip.hint_hide,힌트 숨기기,Hide hint,ヒントを非表示,隐藏提示,隱藏提示,Подсказку Скрыть,Hinweis Ausblenden
+,,,,,,,
+tutorial.panel_7,"키보드 1 ~ 5 : 물체 선택
+
+스페이스 : 배치 / 플레이 전환
+
+마우스 좌클릭 : 선택 / 배치 / 상호작용
+
+마우스 우클릭 : 취소
+
+마우스 우클릭 드래그 : 카메라 이동
+
+마우스 휠 : 확대 / 축소","Keyboard 1 ~ 5 : Select Object
+
+Space : Toggle Build / Play Mode
+
+Left Click : Select / Place / Interact
+
+Right Click : Cancel
+
+Right Click + Drag : Move Camera
+
+Mouse Wheel : Zoom In / Out","キーボード 1 ～ 5 : オブジェクト選択
+
+スペース : 配置 / プレイ切り替え
+
+マウス左クリック : 選択 / 配置 / インタラクト
+
+マウス右クリック : キャンセル
+
+マウス右クリック + ドラッグ : カメラ移動
+
+マウスホイール : ズームイン / ズームアウト","键盘 1 ~ 5 : 选择物体
+
+空格键 : 切换 放置 / 游戏 模式
+
+鼠标左键 : 选择 / 放置 / 交互
+
+鼠标右键 : 取消
+
+鼠标右键 + 拖动 : 移动相机
+
+鼠标滚轮 : 放大 / 缩小","鍵盤 1 ~ 5：選擇物件
+
+空白鍵：切換建造／遊玩模式
+
+左鍵：選擇／放置／互動
+
+右鍵：取消
+
+右鍵拖曳：移動相機
+
+滑鼠滾輪：縮放","Клавиши 1–5: Выбрать объект
+
+Пробел: Переключить режим строительства / игры
+
+ЛКМ: Выбрать / Разместить / Взаимодействовать
+
+ПКМ: Отмена
+
+ПКМ + Перетаскивание: Переместить камеру
+
+Колёсико мыши: Приблизить / Отдалить","Tasten 1–5: Objekt auswählen
+
+Leertaste: Zwischen Bau- und Spielmodus wechseln
+
+Linksklick: Auswählen / Platzieren / Interagieren
+
+Rechtsklick: Abbrechen
+
+Rechtsklick + Ziehen: Kamera bewegen
+
+Mausrad: Vergrößern / Verkleinern"
+,,,,,,,
+option.return_to_title,타이틀 화면으로 돌아가기,Return to Title Screen,タイトル画面に戻る,返回标题画面,返回標題畫面,Вернуться в главное меню,Zum Titelbildschirm Zurückkehren
+,,,,,,,
+hint_po_place_guide_with_strength,"S: 플립
+D: 단계 증가
+F: 단계 감소
+G: 삭제","S: Flip
+D: Level Up
+F: Level Down
+G: Delete","S: フリップ
+D: レベルアップ
+F: レベルダウン
+G: 削除","S: 翻转
+D: 提高等级
+F: 降低等级
+G: 删除","S：翻轉
+D：提高等級
+F：降低等級
+G：刪除","S: Отразить
+D: Увеличить уровень
+F: Уменьшить уровень
+G: Удалить","S: Spiegeln
+D: Stufe Erhöhen
+F: Stufe Verringern
+G: Löschen"
+hint_po_place_guide_no_strength,"S: 플립
+G: 삭제","S: Flip
+G: Delete","S: フリップ
+G: 削除","S: 翻转
+G: 删除","S：翻轉
+G：刪除","S: Отразить
+G: Удалить","S: Spiegeln
+G: Löschen"
+,,,,,,,
+chapter.ending,엔딩,Ending,エンディング,结局,結局,Финал,Ende
+chapter.bonus_ending,보너스 엔딩,Bonus Ending,ボーナスエンディング,额外结局,額外結局,Бонусная концовка,Bonus-Ende

@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d534bbde0a6c064aa81a70c1257e13e, type: 3}
+  m_Name: OpenPlatform
+  m_EditorClassIdentifier: 
+  id: 1
+  prefab: {fileID: 986643318227075830, guid: fc59e5676b79b3645b4ec978ac2f653f, type: 3}
+  placementType: 0
+  allowRotate: 0
+  allowFlipX: 1
+  allowFlipY: 0
+  iconNormalUIPrefab: {fileID: 9121930953229476305, guid: 8d6e81dce483a6a4694da195ed3e2daa, type: 3}
+  iconExhaustedUIPrefab: {fileID: 0}
+  useCustomPaletteIconSize: 0
+  paletteIconSize: {x: 80, y: 80}
+  useCustomPaletteIconScale: 1
+  paletteIconScale: {x: 1.4, y: 1.4, z: 1}

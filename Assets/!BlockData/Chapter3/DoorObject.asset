@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d534bbde0a6c064aa81a70c1257e13e, type: 3}
+  m_Name: DoorObject
+  m_EditorClassIdentifier: 
+  id: 15
+  prefab: {fileID: 986643318227075830, guid: 6b2ff256113ddc54aaa450d7b6b0ec38, type: 3}
+  placementType: 0
+  allowRotate: 0
+  allowFlipX: 1
+  allowFlipY: 0
+  allowStrengthControl: 0
+  minStrengthLevel: 1
+  maxStrengthLevel: 3
+  defaultStrengthLevel: 1
+  iconNormalUIPrefab: {fileID: 9121930953229476305, guid: b792bb7f4a6c51d46b4e004de0ab2d56, type: 3}
+  iconExhaustedUIPrefab: {fileID: 0}
+  useCustomPaletteIconSize: 0
+  paletteIconSize: {x: 100, y: 100}
+  useCustomPaletteIconScale: 1
+  paletteIconScale: {x: 1.4, y: 1.4, z: 1}

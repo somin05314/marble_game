@@ -1,0 +1,122 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e81a06cd4a267f347a5fc5e6bb4ce2ef, type: 3}
+  m_Name: StageOrder
+  m_EditorClassIdentifier: 
+  mainStageSequences:
+  - name: "\uCC55\uD1301"
+    stageIds:
+    - Stage01
+    - Stage02
+    - Stage03
+    - Stage04
+    - Stage15
+    - Stage05
+    - Stage06
+    - Stage07
+    - Stage08
+    - Stage09
+    - Stage10
+    - Stage11
+    - Stage12
+    - Stage13
+    - Stage14
+    - Stage16
+    extraStageIds:
+    - Stage18
+    - Stage17
+    - Stage19
+    - Stage20
+  - name: "\uCC55\uD1302"
+    stageIds:
+    - Stage21
+    - Stage22
+    - Stage24
+    - Stage23
+    - Stage26
+    - Stage27
+    - Stage25
+    - Stage28
+    - Stage29
+    - Stage30
+    - Stage33
+    - Stage31
+    - Stage32
+    - Stage34
+    - Stage35
+    - Stage36
+    extraStageIds:
+    - Stage37
+    - Stage38
+    - Stage39
+    - Stage40
+  - name: "\uCC55\uD1303"
+    stageIds:
+    - Stage41
+    - Stage42
+    - Stage43
+    - Stage44
+    - Stage45
+    - Stage46
+    - Stage47
+    - Stage48
+    - Stage49
+    - Stage50
+    - Stage51
+    - Stage52
+    - Stage53
+    - Stage54
+    - Stage55
+    - Stage56
+    extraStageIds:
+    - Stage57
+    - Stage58
+    - Stage59
+    - Stage60
+  unlockRules:
+  - clearStageId: Stage05
+    unlockStageId: Stage18
+  - clearStageId: Stage07
+    unlockStageId: Stage17
+  - clearStageId: Stage13
+    unlockStageId: Stage19
+  - clearStageId: Stage16
+    unlockStageId: Stage20
+  - clearStageId: Stage27
+    unlockStageId: Stage37
+  - clearStageId: Stage28
+    unlockStageId: Stage38
+  - clearStageId: Stage34
+    unlockStageId: Stage39
+  - clearStageId: Stage36
+    unlockStageId: Stage40
+  - clearStageId: Stage46
+    unlockStageId: Stage57
+  - clearStageId: Stage48
+    unlockStageId: Stage58
+  - clearStageId: Stage54
+    unlockStageId: Stage59
+  - clearStageId: Stage56
+    unlockStageId: Stage60
+  isDemoBuild: 0
+  demoAllowedStageIds:
+  - Stage01
+  - Stage02
+  - Stage03
+  - Stage04
+  - Stage05
+  - Stage06
+  - Stage07
+  - Stage08
+  - Stage15
+  - Stage21
+  - Stage18
